@@ -6,6 +6,8 @@ class Login extends StatefulWidget {
 }
 
 class _LoginState extends State<Login> {
+  final usernameController = TextEditingController();
+  final passController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -34,7 +36,8 @@ class _LoginState extends State<Login> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
+                  TextFormField(
+                    controller: usernameController,
                     enableSuggestions: true,
                     decoration: InputDecoration(
                       hintText: 'Username',
@@ -52,7 +55,8 @@ class _LoginState extends State<Login> {
                   SizedBox(
                     height: 25,
                   ),
-                  TextField(
+                  TextFormField(
+                    controller: passController,
                     obscureText: true,
                     enableSuggestions: false,
                     autocorrect: false,
@@ -73,25 +77,34 @@ class _LoginState extends State<Login> {
                     height: 25,
                   ),
                   Center(
-                    child: RaisedButton(
-                      padding: EdgeInsets.fromLTRB(45, 10, 45, 10),
-                      color: Colors.blue[600],
+                    child: ElevatedButton(
+                      style: ButtonStyle(
+                          // padding: EdgeInsets.all(16.0),
+                          ),
+                      // padding: EdgeInsets.fromLTRB(45, 10, 45, 10),
+                      // color: Colors.blue[600],
                       child: Text(
                         'LOGIN',
                         style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
                             letterSpacing: 1),
                       ),
                       onPressed: () {
                         FocusScope.of(context)
-                            .unfocus(); // dismiss keyboard on login
+                            .unfocus(); // dismiss keyboard on login ..
+                        // need to be dismissed on any part of sreen
                         //Navigator.pushNamed(context, routeName)
                         print('Login');
+                        print(usernameController.text);
+                        print(passController.text);
                       },
                     ),
                   ),
                   SizedBox(height: 20),
-                  InkWell(
+                  TextButton(
+                    // padding: EdgeInsets.only(left: 0),
                     child: Text(
                       'Forgot your password?',
                       style: TextStyle(
@@ -99,13 +112,13 @@ class _LoginState extends State<Login> {
                         fontSize: 16,
                       ),
                     ),
-                    onTap: () {
+                    onPressed: () {
                       //Navigator.pushNamed(context, routeName);
                       print('forgot password');
                     },
                   ),
-                  SizedBox(height: 5),
-                  InkWell(
+                  TextButton(
+                    //  padding: EdgeInsets.only(left: 0),
                     child: Text(
                       'Create a new account',
                       style: TextStyle(
@@ -113,7 +126,7 @@ class _LoginState extends State<Login> {
                         fontSize: 16,
                       ),
                     ),
-                    onTap: () {
+                    onPressed: () {
                       //Navigator.push(context, route);
                       print('create account');
                     },
