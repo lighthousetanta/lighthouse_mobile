@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:the_lighthouse/models/poi.dart';
 
 class AddPerson extends StatefulWidget {
   @override
@@ -31,7 +32,7 @@ class _AddPersonState extends State<AddPerson> {
     });
   }
 
-  void _submit() async {
+  Future<void> _submit() async {
     String imgPath = _image.path;
     String imgName = imgPath.split("/").last;
 
@@ -41,22 +42,25 @@ class _AddPersonState extends State<AddPerson> {
         // "mName": _mName.text,
         // "lname": _lName.text,
         // "age": 15,
+        // "contactPerson": {'username': 0},
         "name": _fName.text,
         'image': await MultipartFile.fromFile(imgPath, filename: imgName),
       });
 
       var dio = Dio();
-      String endppoint = "http://192.168.1.5:8000/api/missing";
-      Response response = await dio.post(endppoint, data: formData);
-      // Response response = await dio.get(endppoint);
+      String endpoint =
+          "https://murmuring-thicket-06467.herokuapp.com/api/missing";
+      Response response = await dio.post(endpoint, data: formData);
       print("Submit Response: $response");
       if (response.statusCode == 201) {
-        setState(() {
-          loaded = true;
-        });
+        print('POST --> Successfully [OK 201]');
+
+        final Poi newPoi = Poi.fromJson(response.data);
+        // loaded = true;
+        Navigator.pop(context, newPoi);
       }
     } catch (e) {
-      print("Erorrr >>>: $e");
+      print("POST Erorr -->: $e");
     }
   }
 
@@ -183,7 +187,9 @@ class _AddPersonState extends State<AddPerson> {
                         // need to be dismissed on any part of sreen
                         //Navigator.pushNamed(context, routeName)
                         _submit();
-                        // Navigator.pop(context);
+
+                        print('submited');
+                        // Future.delayed(Duration(seconds: 10),()=>);
                       },
                     ),
                     SizedBox(height: 20),
