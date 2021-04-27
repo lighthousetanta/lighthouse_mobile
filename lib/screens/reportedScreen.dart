@@ -12,16 +12,7 @@ class Reported extends StatefulWidget {
 }
 
 class _ReportedState extends State<Reported> {
-  // final List<Poi> persons = [
-  // Poi(name: 'Robin', age: 12, address: 'Gotham'),
-  // Poi(name: 'Ali Mojahed Moustafa', age: 22, address: 'Cairo'),
-  // Poi(name: 'Emad Mahmoud', age: 33, address: 'Alex'),
-  // Poi(name: 'Alaa Abdullah', age: 44, address: 'New Jersey'),
-  // Poi(name: 'Rami faris', age: 55, address: 'Los Angeles'),
-  // Poi(name: 'Othman Adel', age: 66, address: 'London'),
-  // Poi()
-  // ];
-  List<Poi> newPersons = [];
+  List<Poi> persons = [];
   Future<List<Poi>> getPersons() async {
     var dio = Dio();
 
@@ -33,17 +24,16 @@ class _ReportedState extends State<Reported> {
 
       if (response.statusCode == 200) {
         print('GET --> Successfully [OK 200]');
-        // print(response.data);
 
         for (var newPerson in response.data) {
-          newPersons.add(Poi.fromJson(newPerson));
+          persons.add(Poi.fromJson(newPerson));
         }
       }
     } catch (e) {
       print('GET Error --> $e');
     }
 
-    return newPersons;
+    return persons;
   }
 
   Future<List<Poi>> _future;
@@ -51,7 +41,7 @@ class _ReportedState extends State<Reported> {
   @override
   void initState() {
     // caching the retrieved List to Prevent Multiple GET requests
-    _future = getPersons(); 
+    _future = getPersons();
     super.initState();
   }
 
@@ -67,7 +57,7 @@ class _ReportedState extends State<Reported> {
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               return snapshot.data == null
                   ? spinKit.SpinKitFadingCircle(
-                      color: Colors.blue,
+                      color: Colors.teal[500],
                       size: 70,
                     )
                   : ListView.builder(
@@ -85,7 +75,7 @@ class _ReportedState extends State<Reported> {
 
                             if (deleted == true) {
                               setState(() {
-                                newPersons.removeAt(idx);
+                                persons.removeAt(idx);
                               });
                             }
                           },
@@ -107,7 +97,6 @@ class _ReportedState extends State<Reported> {
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
-                                    // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                     children: [
                                       Text('Name',
                                           style: TextStyle(
@@ -160,10 +149,9 @@ class _ReportedState extends State<Reported> {
         onPressed: () async {
           final newPoi = await Navigator.push(
               context, MaterialPageRoute(builder: (context) => AddPerson()));
-          print("00000000000");
-          print(newPoi);
+
           if (newPoi != null) {
-            setState(() => newPersons.add(newPoi));
+            setState(() => persons.add(newPoi));
           }
         },
         child: Icon(Icons.add),
