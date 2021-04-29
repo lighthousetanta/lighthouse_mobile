@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class Profile extends StatelessWidget {
+class UserProfile extends StatelessWidget {
   final username = 'Gon Freices';
   final casesNum = 999;
   @override
@@ -16,17 +16,22 @@ class Profile extends StatelessWidget {
         ),
         body: SafeArea(
             child: Container(
-          color: Colors.grey[200],
+          decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Colors.teal[200], Colors.teal[800]])),
+          height: double.infinity,
+          width: double.infinity,
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 50, 16, 0),
             child: ListView(
               children: [
                 Center(
-                  // add change avatar functionality *****
                   child: CircleAvatar(
-                    radius: 30,
+                    radius: 50,
+                    backgroundColor: Colors.white,
                     child: Icon(
-                      
                       Icons.account_circle,
                       size: 50,
                     ),
@@ -40,9 +45,9 @@ class Profile extends StatelessWidget {
                       child: Text(
                         '$username',
                         style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange[800]),
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     Divider(
@@ -52,25 +57,30 @@ class Profile extends StatelessWidget {
                     SizedBox(height: 20),
                     TextButton.icon(
                         onPressed: () {},
+                        style: TextButton.styleFrom(primary: Colors.white),
                         icon: Icon(
                           Icons.search,
                           color: Colors.black,
                         ),
                         label: Text(
-                          'My Case/s',
+                          'My Cases',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
                           ),
                         )),
                     TextButton.icon(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.pushNamed(context, '/reportedScreen');
+                          // push according to user ID
+                        },
+                        style: TextButton.styleFrom(primary: Colors.white),
                         icon: Icon(
                           Icons.archive,
                           color: Colors.black,
                         ),
                         label: Text(
-                          'Reported Cases',
+                          'All Reported Cases',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -78,12 +88,13 @@ class Profile extends StatelessWidget {
                         )),
                     TextButton.icon(
                         onPressed: () {},
+                        style: TextButton.styleFrom(primary: Colors.white),
                         icon: Icon(
                           Icons.save,
                           color: Colors.black,
                         ),
                         label: Text(
-                          'Saved POI',
+                          'Saved POIs for volunteering',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
