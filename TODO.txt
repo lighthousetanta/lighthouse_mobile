@@ -1,0 +1,10 @@
+search endpoint
+get(photo)
+response = similarity
+-----------------------
+Questions:
+how much data will be fetched ?
+
+if get was empty or error --> UI
+------------------------
+add change avatar functionality for the user

@@ -6,25 +6,24 @@ import 'package:dio/dio.dart';
 import 'package:the_lighthouse/models/poi.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 
-class AddPerson extends StatefulWidget {
+class EditPoi extends StatefulWidget {
+  final Poi poi;
+  EditPoi({this.poi});
   @override
-  _AddPersonState createState() => _AddPersonState();
+  _EditPoiState createState() => _EditPoiState();
 }
 
-class _AddPersonState extends State<AddPerson> {
-  final _fName = TextEditingController();
-
-  final _mName = TextEditingController();
-
-  final _lName = TextEditingController();
-
-  final _age = TextEditingController();
-
+class _EditPoiState extends State<EditPoi> {
+/* Provider is comming */
+  String _fName;
+  String _mName;
+  String _lName;
+  int _age;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool loadingOverlay = false;
-  bool imageLoaded = false;
 
+  bool imageLoaded = false;
   File _image;
   final picker = ImagePicker();
 
@@ -39,34 +38,45 @@ class _AddPersonState extends State<AddPerson> {
     }
   }
 
-  Future<void> _submit() async {
-    String imgPath = _image.path;
-    String imgName = imgPath.split("/").last;
+  Future<void> _update(int poiID) async {
+    String imgPath;
+    String imgName;
 
+    if (imageLoaded) {
+      imgPath = _image.path;
+      imgName = imgPath.split("/").last;
+    }
+
+    bool updated = false;
+    var body = {
+      "name": _fName,
+      'image': imageLoaded ? await MultipartFile.fromFile(imgPath, filename: imgName): null,
+    };
+    body.removeWhere((key, value) => value == null);
     try {
-      var formData = FormData.fromMap({
-        "name": _fName.text,
-        'image': await MultipartFile.fromFile(imgPath, filename: imgName),
-      });
+      var formData = FormData.fromMap(body);
 
       var dio = Dio();
-      String endpoint = 'https://lighthousetanta.herokuapp.com/api/missing';
-      Response response = await dio.post(endpoint, data: formData);
+      String endpoint =
+          "https://lighthousetanta.herokuapp.com/api/missing/$poiID";
 
-      if (response.statusCode == 201) {
-        print('POST --> Successfully [OK 201]');
+      Response response = await dio.patch(endpoint, data: formData);
 
-        final Poi newPoi = Poi.fromJson(response.data);
-
-        Navigator.pop(context, newPoi);
+      print('UPDATE Code--> ${response.statusCode}');
+     
+      if (response.statusCode == 202) {
+        updated = true;
+        Poi updatedPoi = Poi.fromJson(response.data);
+        Navigator.pop(context, [updated, updatedPoi]);
       }
     } catch (e) {
-      print("POST Erorr -->: $e");
+      print("UPDATE Error -->: $e");
 
       _showMyDialog(context);
       //removing  the LoadingOverlay effect
-      setState(() {});
-      loadingOverlay = false;
+      setState(() {
+        loadingOverlay = false;
+      });
     }
   }
 
@@ -75,7 +85,7 @@ class _AddPersonState extends State<AddPerson> {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            'Add a Missing Person',
+            'Edit Profile',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
@@ -94,7 +104,7 @@ class _AddPersonState extends State<AddPerson> {
                     onPressed: _getImage,
                     icon: Icon(Icons.add_a_photo),
                     label: Text(
-                      'Add a Photo',
+                      'Update the current Image',
                       style: TextStyle(
                         fontSize: 22,
                       ),
@@ -106,10 +116,10 @@ class _AddPersonState extends State<AddPerson> {
                     ? Text("Successfully Loaded.",
                         style: TextStyle(color: Colors.green[700]))
                     : Text(
-                        'You must Choose an Image.',
+                        'Choose a new image',
                         style: TextStyle(color: Colors.redAccent),
                       ),
-                SizedBox(height: 15),
+                SizedBox(height: 8),
                 Form(
                   key: _formKey,
                   child: Container(
@@ -118,7 +128,8 @@ class _AddPersonState extends State<AddPerson> {
                       Column(children: [
                         TextFormField(
                           keyboardType: TextInputType.text,
-                          controller: _fName,
+                          // controller: _fName,
+                          initialValue: widget.poi.name,
                           maxLength: 20,
                           validator: (value) {
                             if (value.isEmpty) {
@@ -126,6 +137,7 @@ class _AddPersonState extends State<AddPerson> {
                             }
                             return null;
                           },
+                          onSaved: (String value) => _fName = value,
                           textInputAction: TextInputAction.next,
                           onEditingComplete: () =>
                               FocusScope.of(context).nextFocus(),
@@ -139,26 +151,20 @@ class _AddPersonState extends State<AddPerson> {
                                   color: Colors.tealAccent[700], width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.teal, width: 2)),
-                            errorBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.redAccent[700])),
-                            focusedErrorBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.teal, width: 2)),
-                            // contentPadding: EdgeInsets.all(15),
+                              borderSide:
+                                  BorderSide(color: Colors.teal, width: 2),
+                            ),
                           ),
                         ),
                         SizedBox(height: 12),
                         TextFormField(
-                          controller: _mName,
                           // validator: (value) {
                           //   if (value.isEmpty) {
                           //     return "This field cann't be empty.";
                           //   }
                           //   return null;
                           // },
+                          onSaved: (String value) => _mName = value,
                           decoration: InputDecoration(
                             hintText: 'Middle Name',
                             hintStyle: TextStyle(color: Colors.grey),
@@ -176,13 +182,13 @@ class _AddPersonState extends State<AddPerson> {
                         ),
                         SizedBox(height: 12),
                         TextFormField(
-                          controller: _lName,
                           // validator: (value) {
                           //   if (value.isEmpty) {
                           //     return "This field cann't be empty.";
                           //   }
                           //   return null;
                           // },
+                          onSaved: (String value) => _lName = value,
                           decoration: InputDecoration(
                             hintText: 'Last Name',
                             hintStyle: TextStyle(color: Colors.grey),
@@ -200,7 +206,6 @@ class _AddPersonState extends State<AddPerson> {
                         ),
                         SizedBox(height: 12),
                         TextFormField(
-                          controller: _age,
                           // validator: (value) {
                           //   int val = int.tryParse(value);
                           //   if (value.isEmpty) {
@@ -210,6 +215,7 @@ class _AddPersonState extends State<AddPerson> {
                           //   }
                           //   return null;
                           // },
+                          //  onSaved: (String value) => _age = value as int,
                           keyboardType: TextInputType.number,
                           decoration: InputDecoration(
                             hintText: 'Age ex: 12 years old.',
@@ -244,11 +250,10 @@ class _AddPersonState extends State<AddPerson> {
                             onPressed: () {
                               FocusScope.of(context).unfocus();
 
-                              if (_formKey.currentState.validate() &&
-                                  imageLoaded) {
-                                print('submitted');
+                              if (_formKey.currentState.validate()) {
+                                _formKey.currentState.save();
                                 loadingOverlay = true;
-                                _submit();
+                                _update(widget.poi.id);
                               }
                             }),
                       )),
