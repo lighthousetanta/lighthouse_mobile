@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -25,12 +24,14 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  Future<String> _search() async {
-    String endPoint = 'https://jsonplaceholder.typicode.com/todos/1';
-    var dio = Dio();
-    Response response = await dio.get(endPoint);
-    print(response);
-    return response.data.toString();
+  // ignore: unused_element
+  //Future              async
+  void _search() {
+ 
+    Map<String, Object> data = {"name": "mohamed", "sim": 99};
+    setState(() {
+      similarity = data["sim"].toString();
+    });
   }
 
   @override
@@ -97,4 +98,17 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 }
 
+class Result extends StatelessWidget {
+  final data;
+  Result({this.data});
 
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Text(
+        "$data",
+        style: TextStyle(color: Colors.amber, fontSize: 40),
+      ),
+    );
+  }
+}

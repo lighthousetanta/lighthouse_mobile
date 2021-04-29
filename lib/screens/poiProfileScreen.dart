@@ -7,6 +7,7 @@ import 'package:loading_overlay/loading_overlay.dart';
 
 class PoiProfile extends StatefulWidget {
   final Poi poi;
+
   PoiProfile({this.poi});
 
   @override
@@ -16,20 +17,21 @@ class PoiProfile extends StatefulWidget {
 class _PoiProfileState extends State<PoiProfile> {
   bool loadingOverlay = false;
 
-  Future<void> deletePoi(int poiID) async {
+  Future<void> deletePoi() async {
     loadingOverlay = true;
     setState(() {});
     var dio = Dio();
     String endPoint =
-        "https://lighthousetanta.herokuapp.com/api/missing/$poiID";
+        "https://murmuring-thicket-06467.herokuapp.com/api/missing/${widget.poi.id}";
     try {
       Response response = await dio.delete(endPoint);
       print(response.statusCode);
 
       if (response.statusCode == 204) {
-        print("${widget.poi.name} whose ID is ${widget.poi.id} Was Deleted");
+        print(
+            "${widget.poi.name} whose ID is ${widget.poi.id} Was removed from Database");
         final bool deleted = true;
-        Navigator.pop(context, [deleted]);
+        Navigator.pop(context, deleted);
       }
     } catch (e) {
       _showMyDialog(context);
@@ -51,7 +53,7 @@ class _PoiProfileState extends State<PoiProfile> {
               gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.teal[200], Colors.teal[800]])),
+                  colors: [Colors.indigo[200], Colors.indigo])),
           height: double.infinity,
           width: double.infinity,
           child: Padding(
@@ -61,9 +63,9 @@ class _PoiProfileState extends State<PoiProfile> {
                 Container(
                     height: 200,
                     width: 200,
-                    child: widget.poi.image == null
+                    child: widget.poi.images == null
                         ? Image.asset("assets/images/appImages/johndoe.png")
-                        : CachedNetworkImage(imageUrl: widget.poi.image)),
+                        : CachedNetworkImage(imageUrl: widget.poi.images[0])),
                 SizedBox(
                   height: 15,
                 ),
@@ -102,25 +104,15 @@ class _PoiProfileState extends State<PoiProfile> {
                         width: 100,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            var updateResult = await Navigator.push(
+                          onPressed: () {
+                            Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                    builder: (context) => EditPoi(
-                                          poi: widget.poi,
-                                        )));
-                            bool updated = updateResult[0];
-                            Poi updatedPoi = updateResult[1];
-                            if (updated == true) {
-                              // setState(() {
-                              //   widget.poi = updatedPoi;
-                              // });
-                              Navigator.pop(context, [updated, updatedPoi]);
-                            }
+                                    builder: (context) => EditPoiProfile()));
                           },
                           child: Text('Edit',
-                              style:
-                                  TextStyle(fontSize: 20, color: Colors.black)),
+                              style: TextStyle(
+                                  fontSize: 20, color: Colors.blue[700])),
                           style: ElevatedButton.styleFrom(
                               elevation: 5, primary: Colors.indigo[100]),
                         )),
@@ -128,10 +120,10 @@ class _PoiProfileState extends State<PoiProfile> {
                         width: 100,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () => deletePoi(widget.poi.id),
+                          onPressed: deletePoi,
                           child: Text('Delete', // Delete it from the list too!
                               style: TextStyle(
-                                  fontSize: 20, color: Colors.red[800])),
+                                  fontSize: 20, color: Colors.redAccent[700])),
                           style: ElevatedButton.styleFrom(
                               elevation: 5, primary: Colors.indigo[100]),
                         )),

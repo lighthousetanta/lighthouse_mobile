@@ -50,7 +50,8 @@ class _AddPersonState extends State<AddPerson> {
       });
 
       var dio = Dio();
-      String endpoint = 'https://lighthousetanta.herokuapp.com/api/missing';
+      String endpoint =
+          "https://murmuring-thicket-06467.herokuapp.com/api/missing";
       Response response = await dio.post(endpoint, data: formData);
 
       if (response.statusCode == 201) {
@@ -139,15 +140,9 @@ class _AddPersonState extends State<AddPerson> {
                                   color: Colors.tealAccent[700], width: 1),
                             ),
                             focusedBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.teal, width: 2)),
-                            errorBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.redAccent[700])),
-                            focusedErrorBorder: OutlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.teal, width: 2)),
-                            // contentPadding: EdgeInsets.all(15),
+                              borderSide:
+                                  BorderSide(color: Colors.teal, width: 2),
+                            ),
                           ),
                         ),
                         SizedBox(height: 12),

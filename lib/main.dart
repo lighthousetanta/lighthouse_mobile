@@ -37,18 +37,18 @@ class MyApp extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       routes: {
-        '/': (context) =>Login(),
+        '/': (context) => Reported(),
         '/loginScreen': (context) => Login(),
-        '/UserProfileScreen': (context) => UserProfile(),
+        '/profileScreen': (context) => Profile(),
         '/searchScreen': (context) => SearchScreen(),
         '/addPersonScreen': (context) => AddPerson(),
         '/resultScreen': (context) =>
             ResultScreen(), // todo: for multiple faces
         '/reportedScreen': (context) => Reported(),
         '/poiProfileScreen': (context) => PoiProfile(),
-        'editPoiProfile': (context) => EditPoi()
+        'editPoiProfile': (context) => EditPoiProfile()
       },
-      initialRoute: '/UserProfileScreen',
+      initialRoute: '/reportedScreen',
     );
   }
 }

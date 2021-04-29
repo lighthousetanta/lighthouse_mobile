@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class UserProfile extends StatelessWidget {
+class Profile extends StatelessWidget {
   final username = 'Gon Freices';
   final casesNum = 999;
   @override
@@ -16,23 +16,17 @@ class UserProfile extends StatelessWidget {
         ),
         body: SafeArea(
             child: Container(
-          decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.teal[200], Colors.teal[800]])),
-          height: double.infinity,
-          width: double.infinity,
+          color: Colors.grey[200],
           child: Padding(
             padding: EdgeInsets.fromLTRB(16, 50, 16, 0),
             child: ListView(
               children: [
                 Center(
-                  
+                  // add change avatar functionality *****
                   child: CircleAvatar(
-                    radius: 50,
-                    backgroundColor: Colors.white,
+                    radius: 30,
                     child: Icon(
+                      
                       Icons.account_circle,
                       size: 50,
                     ),
@@ -46,9 +40,9 @@ class UserProfile extends StatelessWidget {
                       child: Text(
                         '$username',
                         style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.orange[800]),
                       ),
                     ),
                     Divider(
@@ -58,30 +52,12 @@ class UserProfile extends StatelessWidget {
                     SizedBox(height: 20),
                     TextButton.icon(
                         onPressed: () {},
-                        style: TextButton.styleFrom(primary: Colors.white),
                         icon: Icon(
                           Icons.search,
                           color: Colors.black,
                         ),
                         label: Text(
-                          'My Cases',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                          ),
-                        )),
-                    TextButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/reportedScreen');
-                          // push according to user ID
-                        },
-                        style: TextButton.styleFrom(primary: Colors.white),
-                        icon: Icon(
-                          Icons.archive,
-                          color: Colors.black,
-                        ),
-                        label: Text(
-                          'All Reported Cases',
+                          'My Case/s',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
@@ -89,13 +65,25 @@ class UserProfile extends StatelessWidget {
                         )),
                     TextButton.icon(
                         onPressed: () {},
-                        style: TextButton.styleFrom(primary: Colors.white),
+                        icon: Icon(
+                          Icons.archive,
+                          color: Colors.black,
+                        ),
+                        label: Text(
+                          'Reported Cases',
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                          ),
+                        )),
+                    TextButton.icon(
+                        onPressed: () {},
                         icon: Icon(
                           Icons.save,
                           color: Colors.black,
                         ),
                         label: Text(
-                          'Saved POIs for volunteering',
+                          'Saved POI',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
