@@ -13,11 +13,11 @@ class Reported extends StatefulWidget {
 
 class _ReportedState extends State<Reported> {
   List<Poi> persons = [];
+
   Future<List<Poi>> getPersons() async {
     var dio = Dio();
 
-    String endPoint =
-        "https://murmuring-thicket-06467.herokuapp.com/api/missing";
+    String endPoint = "https://lighthousetanta.herokuapp.com/api/missing";
 
     try {
       Response response = await dio.get(endPoint);
@@ -32,7 +32,6 @@ class _ReportedState extends State<Reported> {
     } catch (e) {
       print('GET Error --> $e');
     }
-
     return persons;
   }
 
@@ -49,102 +48,109 @@ class _ReportedState extends State<Reported> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Reported Persons'),
+        title: Text('All Reported Persons'),
       ),
-      body: Container(
-        child: FutureBuilder(
-            future: _future,
-            builder: (BuildContext context, AsyncSnapshot snapshot) {
-              return snapshot.data == null
-                  ? spinKit.SpinKitFadingCircle(
-                      color: Colors.teal[500],
-                      size: 70,
-                    )
-                  : ListView.builder(
-                      itemCount: snapshot.data.length,
-                      itemBuilder: (context, idx) {
-                        return GestureDetector(
-                          onTap: () async {
-                            bool deleted;
-                            deleted = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      PoiProfile(poi: snapshot.data[idx])),
-                            );
+      body: FutureBuilder(
+          future: _future,
+          builder: (BuildContext context, AsyncSnapshot snapshot) {
+            if (snapshot.data == null) {
+              return spinKit.SpinKitRing(
+                color: Colors.teal[500],
+                size: 70,
+              );
+            }
 
-                            if (deleted == true) {
-                              setState(() {
-                                persons.removeAt(idx);
-                              });
-                            }
-                          },
-                          child: Card(
-                            child: Row(
-                              children: [
-                                Container(
-                                    height: 200,
-                                    width: 200,
-                                    child: CachedNetworkImage(
-                                      imageUrl: snapshot.data[idx].images[0],
-                                      fit: BoxFit.contain,
-                                      placeholder: (context, url) =>
-                                          CircularProgressIndicator(),
-                                    )),
-                                Container(
-                                  height: 204,
-                                  padding: EdgeInsets.fromLTRB(10, 15, 0, 0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text('Name',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                          )),
-                                      Container(
-                                        width: 190,
-                                        child: Text(
-                                          snapshot.data[idx].name,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headline6,
-                                          maxLines: 2,
-                                        ),
-                                      ),
-                                      SizedBox(height: 15),
-                                      Text('Age',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                          )),
-                                      Text(
-                                        '12', // persons[idx].age.toString()
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline6,
-                                      ),
-                                      SizedBox(height: 15),
-                                      Text('Last known location',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                          )),
-                                      Text(
-                                        'Cairo', //persons[idx].address
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .headline6,
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+            return ListView.builder(
+              itemCount: snapshot.data.length,
+              itemBuilder: (context, idx) {
+                return GestureDetector(
+                  onTap: () async {
+                    List result;
+                    result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              PoiProfile(poi: snapshot.data[idx])),
                     );
-            }),
-      ),
+                    bool updated;
+                    Poi updatedPoi;
+                    bool deleted;
+                    if (result.length == 2) {
+                      updated = result[0];
+                      updatedPoi = result[1];
+                    } else {
+                      deleted = result[0];
+                    }
+
+                    if (deleted == true) {
+                      setState(() {
+                        persons.removeAt(idx);
+                      });
+                    }
+                    if (updated) {
+                      setState(() {
+                        persons[idx] = updatedPoi;
+                      });
+                    }
+                  },
+                  child: Card(
+                    child: Row(
+                      children: [
+                        Container(
+                            height: 200,
+                            width: 200,
+                            child: CachedNetworkImage(
+                              imageUrl: snapshot.data[idx].image,
+                              fit: BoxFit.contain,
+                              placeholder: (context, url) =>
+                                  CircularProgressIndicator(),
+                            )),
+                        Container(
+                          height: 204,
+                          padding: EdgeInsets.fromLTRB(10, 15, 0, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Name',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  )),
+                              Container(
+                                width: 190,
+                                child: Text(
+                                  snapshot.data[idx].name,
+                                  style: Theme.of(context).textTheme.headline6,
+                                  maxLines: 2,
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Text('Age',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  )),
+                              Text(
+                                '12', // persons[idx].age.toString()
+                                style: Theme.of(context).textTheme.headline6,
+                              ),
+                              SizedBox(height: 15),
+                              Text('Last known location',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  )),
+                              Text(
+                                'Cairo', //persons[idx].address
+                                style: Theme.of(context).textTheme.headline6,
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final newPoi = await Navigator.push(

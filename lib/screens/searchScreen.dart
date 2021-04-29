@@ -27,7 +27,6 @@ class _SearchScreenState extends State<SearchScreen> {
   // ignore: unused_element
   //Future              async
   void _search() {
- 
     Map<String, Object> data = {"name": "mohamed", "sim": 99};
     setState(() {
       similarity = data["sim"].toString();
