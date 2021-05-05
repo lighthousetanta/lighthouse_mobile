@@ -1,13 +1,13 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:the_lighthouse/models/poi.dart';
-import 'package:the_lighthouse/screens/editPoiProfile.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import 'package:provider/provider.dart';
+import '../models/poi.dart';
+import '../providers/poi_provider.dart';
+import '../screens/editPoiProfile.dart';
 
 class PoiProfile extends StatefulWidget {
-  final Poi poi;
-  PoiProfile({this.poi});
+  static const routeName = '/poiProfile';
 
   @override
   _PoiProfileState createState() => _PoiProfileState();
@@ -15,34 +15,31 @@ class PoiProfile extends StatefulWidget {
 
 class _PoiProfileState extends State<PoiProfile> {
   bool loadingOverlay = false;
+  bool deleted = false;
 
-  Future<void> deletePoi(int poiID) async {
-    loadingOverlay = true;
-    setState(() {});
-    var dio = Dio();
-    String endPoint =
-        "https://lighthousetanta.herokuapp.com/api/missing/$poiID";
+  Future<void> removePoi(int poiID) async {
     try {
-      Response response = await dio.delete(endPoint);
-      print(response.statusCode);
-
-      if (response.statusCode == 204) {
-        print("${widget.poi.name} whose ID is ${widget.poi.id} Was Deleted");
-        final bool deleted = true;
-        Navigator.pop(context, [deleted]);
-      }
-    } catch (e) {
-      _showMyDialog(context);
-      setState(() {});
-      loadingOverlay = false;
+      await Provider.of<PoiProvider>(context, listen: false).deletePoi(poiID);
+      deleted = true;
+    } catch (error) {
+      deleted = false;
+      print('DELETE Error --> $error');
+      setState(() {
+        loadingOverlay = false;
+      });
+      await _showMyDialog(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final poiID = ModalRoute.of(context).settings.arguments as int;
+    final poiData = Provider.of<PoiProvider>(context);
+    Poi poi = poiData.getById(poiID);
+    print(poi.id);
     return Scaffold(
       appBar: AppBar(
-        title: Text("${widget.poi.name.split(' ')[0]}'s Profile"),
+        title: Text("${poi.name.split(' ')[0]}'s Profile"),
       ),
       body: LoadingOverlay(
         isLoading: loadingOverlay,
@@ -61,17 +58,15 @@ class _PoiProfileState extends State<PoiProfile> {
                 Container(
                     height: 200,
                     width: 200,
-                    child: widget.poi.image == null
+                    child: poi.image == null
                         ? Image.asset("assets/images/appImages/johndoe.png")
-                        : CachedNetworkImage(imageUrl: widget.poi.image)),
+                        : CachedNetworkImage(imageUrl: poi.image)),
                 SizedBox(
                   height: 15,
                 ),
-                Text(widget.poi.name,
-                    style: Theme.of(context).textTheme.headline5),
+                Text(poi.name, style: Theme.of(context).textTheme.headline5),
                 Container(
                     width: double.infinity,
-                    // margin: EdgeInsets.all(20),
                     padding: EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -102,25 +97,13 @@ class _PoiProfileState extends State<PoiProfile> {
                         width: 100,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () async {
-                            var updateResult = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => EditPoi(
-                                          poi: widget.poi,
-                                        )));
-                            bool updated = updateResult[0];
-                            Poi updatedPoi = updateResult[1];
-                            if (updated == true) {
-                              // setState(() {
-                              //   widget.poi = updatedPoi;
-                              // });
-                              Navigator.pop(context, [updated, updatedPoi]);
-                            }
+                          onPressed: () {
+                            Navigator.pushNamed(context, EditPoi.routeName,
+                                arguments: poiID);
                           },
                           child: Text('Edit',
-                              style: TextStyle(
-                                  fontSize: 20, color: Colors.black)),
+                              style:
+                                  TextStyle(fontSize: 20, color: Colors.black)),
                           style: ElevatedButton.styleFrom(
                               elevation: 5, primary: Colors.indigo[100]),
                         )),
@@ -128,8 +111,16 @@ class _PoiProfileState extends State<PoiProfile> {
                         width: 100,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: () => deletePoi(widget.poi.id),
-                          child: Text('Delete', // Delete it from the list too!
+                          onPressed: () async {
+                            setState(() {
+                              loadingOverlay = true;
+                            });
+                            await removePoi(poi.id);
+                            if (deleted) {
+                              Navigator.pop(context);
+                            }
+                          },
+                          child: Text('Delete',
                               style: TextStyle(
                                   fontSize: 20, color: Colors.redAccent[700])),
                           style: ElevatedButton.styleFrom(

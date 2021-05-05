@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import './reportedScreen.dart';
 
 class UserProfile extends StatelessWidget {
+  static const routeName = '/userProfile';
   final username = 'Gon Freices';
   final casesNum = 999;
   @override
@@ -56,50 +58,53 @@ class UserProfile extends StatelessWidget {
                     ),
                     SizedBox(height: 20),
                     TextButton.icon(
-                        onPressed: () {},
-                        style: TextButton.styleFrom(primary: Colors.white),
-                        icon: Icon(
-                          Icons.search,
+                      label: Text(
+                        'My Cases',
+                        style: TextStyle(
                           color: Colors.black,
+                          fontSize: 20,
                         ),
-                        label: Text(
-                          'My Cases',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                          ),
-                        )),
+                      ),
+                      style: TextButton.styleFrom(primary: Colors.white),
+                      icon: Icon(
+                        Icons.search,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {
+                        // push according to user ID
+                      },
+                    ),
                     TextButton.icon(
-                        onPressed: () {
-                          Navigator.pushNamed(context, '/reportedScreen');
-                          // push according to user ID
-                        },
-                        style: TextButton.styleFrom(primary: Colors.white),
-                        icon: Icon(
-                          Icons.archive,
-                          color: Colors.black,
-                        ),
                         label: Text(
                           'All Reported Cases',
                           style: TextStyle(
                             color: Colors.black,
                             fontSize: 20,
                           ),
-                        )),
-                    TextButton.icon(
-                        onPressed: () {},
+                        ),
+                        onPressed: () {
+                          Navigator.pop(context, ReportedScreen.routeName);
+                        },
                         style: TextButton.styleFrom(primary: Colors.white),
                         icon: Icon(
-                          Icons.save,
+                          Icons.archive,
                           color: Colors.black,
-                        ),
-                        label: Text(
-                          'Saved POIs for volunteering',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                          ),
                         )),
+                    TextButton.icon(
+                      label: Text(
+                        'Saved POIs for volunteering',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 20,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(primary: Colors.white),
+                      icon: Icon(
+                        Icons.save,
+                        color: Colors.black,
+                      ),
+                      onPressed: () {},
+                    ),
                   ],
                 ),
                 TextButton(
