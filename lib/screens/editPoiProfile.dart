@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
-import 'package:the_lighthouse/models/poi.dart';
+import 'package:provider/provider.dart';
+import '../models/poi.dart';
+import '../providers/poi_provider.dart';
 import 'package:loading_overlay/loading_overlay.dart';
 
 class EditPoi extends StatefulWidget {
-  final Poi poi;
-  EditPoi({this.poi});
+  static const routeName = '/EditPoi';
   @override
   _EditPoiState createState() => _EditPoiState();
 }
 
 class _EditPoiState extends State<EditPoi> {
-/* Provider is comming */
   String _fName;
   String _mName;
   String _lName;
   int _age;
+  bool updated = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
   bool loadingOverlay = false;
@@ -38,52 +37,27 @@ class _EditPoiState extends State<EditPoi> {
     }
   }
 
-  Future<void> _update(int poiID) async {
-    String imgPath;
-    String imgName;
-
-    if (imageLoaded) {
-      imgPath = _image.path;
-      imgName = imgPath.split("/").last;
-    }
-
-    bool updated = false;
-    var body = {
-      "name": _fName,
-      'image': imageLoaded
-          ? await MultipartFile.fromFile(imgPath, filename: imgName)
-          : null,
-    };
-    body.removeWhere((key, value) => value == null);
+  Future<void> _update(Map<String, dynamic> poiData) async {
     try {
-      var formData = FormData.fromMap(body);
+      await Provider.of<PoiProvider>(context, listen: false)
+          .updatePoi(poiData, _image);
+      updated = true;
+    } catch (error) {
+      updated = false;
+      print("UPDATE Error -->: $error");
 
-      var dio = Dio();
-      String endpoint =
-          "https://lighthousetanta.herokuapp.com/api/missing/$poiID";
-
-      Response response = await dio.patch(endpoint, data: formData);
-
-      print('UPDATE Code--> ${response.statusCode}');
-
-      if (response.statusCode == 202) {
-        updated = true;
-        Poi updatedPoi = Poi.fromJson(response.data);
-        Navigator.pop(context, [updated, updatedPoi]);
-      }
-    } catch (e) {
-      print("UPDATE Error -->: $e");
-
-      _showMyDialog(context);
-      //removing  the LoadingOverlay effect
       setState(() {
         loadingOverlay = false;
       });
+
+      await _showMyDialog(context);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    int poiID = ModalRoute.of(context).settings.arguments as int;
+    Poi oldPoi = Provider.of<PoiProvider>(context).getById(poiID);
     return Scaffold(
         appBar: AppBar(
           title: Text(
@@ -97,7 +71,6 @@ class _EditPoiState extends State<EditPoi> {
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: ListView(
-              // mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Container(
                   width: 120,
@@ -130,8 +103,7 @@ class _EditPoiState extends State<EditPoi> {
                       Column(children: [
                         TextFormField(
                           keyboardType: TextInputType.text,
-                          // controller: _fName,
-                          initialValue: widget.poi.name,
+                          initialValue: oldPoi.name,
                           maxLength: 20,
                           validator: (value) {
                             if (value.isEmpty) {
@@ -249,13 +221,21 @@ class _EditPoiState extends State<EditPoi> {
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               FocusScope.of(context).unfocus();
-
                               if (_formKey.currentState.validate()) {
                                 _formKey.currentState.save();
-                                loadingOverlay = true;
-                                _update(widget.poi.id);
+                                setState(() {
+                                  loadingOverlay = true;
+                                });
+                                Map<String, dynamic> poiData = {
+                                  'id': poiID,
+                                  'name': _fName,
+                                };
+                                await _update(poiData);
+                                if (updated) {
+                                  Navigator.pop(context);
+                                }
                               }
                             }),
                       )),

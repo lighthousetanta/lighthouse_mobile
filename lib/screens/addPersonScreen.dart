@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:dio/dio.dart';
-import 'package:the_lighthouse/models/poi.dart';
+import 'package:provider/provider.dart';
 import 'package:loading_overlay/loading_overlay.dart';
+import '../providers/poi_provider.dart';
 
 class AddPerson extends StatefulWidget {
+  static const routeName = '/addPersonScreen';
   @override
   _AddPersonState createState() => _AddPersonState();
 }
@@ -24,10 +25,9 @@ class _AddPersonState extends State<AddPerson> {
 
   bool loadingOverlay = false;
   bool imageLoaded = false;
-
+  bool added = false;
   File _image;
   final picker = ImagePicker();
-
   Future _getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
 
@@ -39,34 +39,19 @@ class _AddPersonState extends State<AddPerson> {
     }
   }
 
-  Future<void> _submit() async {
-    String imgPath = _image.path;
-    String imgName = imgPath.split("/").last;
-
+  Future<void> _submit(Map<String, dynamic> userInput) async {
     try {
-      var formData = FormData.fromMap({
-        "name": _fName.text,
-        'image': await MultipartFile.fromFile(imgPath, filename: imgName),
+      await Provider.of<PoiProvider>(context, listen: false)
+          .submitNewPoi(_image.path, userInput);
+      added = true;
+    } catch (error) {
+      added = false;
+      print("POST Erorr --> $error");
+
+      setState(() {
+        loadingOverlay = false;
       });
-
-      var dio = Dio();
-      String endpoint = 'https://lighthousetanta.herokuapp.com/api/missing';
-      Response response = await dio.post(endpoint, data: formData);
-
-      if (response.statusCode == 201) {
-        print('POST --> Successfully [OK 201]');
-
-        final Poi newPoi = Poi.fromJson(response.data);
-
-        Navigator.pop(context, newPoi);
-      }
-    } catch (e) {
-      print("POST Erorr -->: $e");
-
-      _showMyDialog(context);
-      //removing  the LoadingOverlay effect
-      setState(() {});
-      loadingOverlay = false;
+      await _showMyDialog(context);
     }
   }
 
@@ -85,7 +70,6 @@ class _AddPersonState extends State<AddPerson> {
           child: Padding(
             padding: const EdgeInsets.all(12.0),
             child: ListView(
-              // mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Container(
                   width: 120,
@@ -147,7 +131,6 @@ class _AddPersonState extends State<AddPerson> {
                             focusedErrorBorder: OutlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Colors.teal, width: 2)),
-                            // contentPadding: EdgeInsets.all(15),
                           ),
                         ),
                         SizedBox(height: 12),
@@ -241,14 +224,21 @@ class _AddPersonState extends State<AddPerson> {
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 1),
                             ),
-                            onPressed: () {
+                            onPressed: () async {
                               FocusScope.of(context).unfocus();
-
                               if (_formKey.currentState.validate() &&
                                   imageLoaded) {
-                                print('submitted');
-                                loadingOverlay = true;
-                                _submit();
+                                setState(() {
+                                  loadingOverlay = true;
+                                });
+                                Map<String, dynamic> input = {
+                                  'name': _fName.text
+                                };
+                                print('submiting...');
+                                await _submit(input);
+                                if (added) {
+                                  Navigator.pop(context);
+                                }
                               }
                             }),
                       )),

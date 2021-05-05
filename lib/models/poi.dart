@@ -1,8 +1,5 @@
-// To parse this JSON data, do
-//
-//     final poi = poiFromJson(jsonString);
-
 import 'dart:convert';
+
 
 class Poi {
   Poi({
@@ -31,3 +28,4 @@ class Poi {
         "image": image,
       };
 }
+
