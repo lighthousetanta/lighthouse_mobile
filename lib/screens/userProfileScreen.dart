@@ -22,7 +22,7 @@ class UserProfile extends StatelessWidget {
               gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [Colors.teal[200], Colors.teal[800]])),
+                  colors: [Colors.white, Colors.grey])),
           height: double.infinity,
           width: double.infinity,
           child: Padding(
@@ -32,7 +32,7 @@ class UserProfile extends StatelessWidget {
                 Center(
                   child: CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.white,
+                    backgroundColor: Colors.blueGrey,
                     child: Icon(
                       Icons.account_circle,
                       size: 50,

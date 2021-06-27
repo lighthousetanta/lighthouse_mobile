@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart' as spinKit;
 import 'package:provider/provider.dart';
+import 'package:the_lighthouse/screens/searchScreen.dart';
+import 'package:the_lighthouse/widgets/poi_card.dart';
 import '../providers/poi_provider.dart';
-import './poiProfileScreen.dart';
 import './addPersonScreen.dart';
 import '../widgets/app_drawer.dart';
 
@@ -36,43 +36,46 @@ class _ReportedScreenState extends State<ReportedScreen> {
     }
   }
 
+  Future _future;
+  Future fetchPersons() {
+    Provider.of<PoiProvider>(context, listen: false).fetchPerUser();
+    return Provider.of<PoiProvider>(context, listen: false).fetchPersons();
+  }
+
   @override
-  void didChangeDependencies() {
+  void initState() {
     if (isInit) {
       isInit = false;
-      setState(() {
-        isLoading = true;
-      });
-      _fetch();
+    _future = fetchPersons();
     }
-
-    super.didChangeDependencies();
+    isInit = false;
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     print('>>>>>>> built <<<<<<<');
-    final persons = Provider.of<PoiProvider>(context).getPersons;
     return Scaffold(
       appBar: AppBar(
         title: Text('Missing Persons Feed'),
         centerTitle: true,
+        actions: [
+          IconButton(
+              icon: Icon(Icons.search),
+              onPressed: () {
+                Navigator.pushNamed(context, SearchScreen.routeName);
+              })
+        ],
       ),
       drawer: AppDrawer(),
       body: RefreshIndicator(
-        onRefresh: () => _fetch(),
+        onRefresh: () => fetchPersons(),
         triggerMode: RefreshIndicatorTriggerMode.onEdge,
-        child: Builder(builder: (context) {
-          if (fetchError) {
-            return Center(
-              child: SingleChildScrollView(
-                physics: AlwaysScrollableScrollPhysics(),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                      minWidth: MediaQuery.of(context).size.width,
-                      minHeight: MediaQuery.of(context).size.height -
-                          AppBar().preferredSize.height -
-                          25),
+        child: FutureBuilder(
+            future: _future,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -86,85 +89,59 @@ class _ReportedScreenState extends State<ReportedScreen> {
                           style: TextStyle(fontSize: 22)),
                       SizedBox(height: 15),
                       Text(
-                        'Please, check out your connection\n or Pull down to Refresh ',
+                        'Please, check out your connection',
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 18),
                       ),
+                      SizedBox(height: 15),
+                      TextButton(
+                          onPressed: () async {
+                            try {
+                              await _fetch();
+                              setState(() {});
+                            } catch (error) {
+                              // doesn't work ??????????!!
+                              ScaffoldMessenger(
+                                  child: SnackBar(
+                                content: Text('Network Error'),
+                                duration: Duration(seconds: 3),
+                              ));
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                side: BorderSide(
+                                    color: Colors.teal,
+                                    width: 1,
+                                    style: BorderStyle.solid),
+                                borderRadius: BorderRadius.circular(50)),
+                          ),
+                          child: Text(
+                            'Try Again',
+                            style: TextStyle(fontSize: 18),
+                          ))
                     ],
                   ),
-                ),
-              ),
-            );
-          } else if (isLoading) {
-            return spinKit.SpinKitRing(color: Colors.teal[500], size: 70);
-          } else {
-            return ListView.builder(
-                itemCount: persons.length,
-                itemBuilder: (context, idx) {
-                  return GestureDetector(
-                    onTap: () {
-                      Navigator.pushNamed(context, PoiProfile.routeName,
-                          arguments: persons[idx].id);
-                    },
-                    child: Card(
-                      child: Row(
-                        children: [
-                          Container(
-                              height: 200,
-                              width: 200,
-                              child: CachedNetworkImage(
-                                imageUrl: persons[idx].image,
-                                fit: BoxFit.contain,
-                                placeholder: (context, url) =>
-                                    CircularProgressIndicator(),
-                              )),
-                          Container(
-                            height: 204,
-                            padding: EdgeInsets.fromLTRB(10, 15, 0, 0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text('Name',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    )),
-                                Container(
-                                  width: 190,
-                                  child: Text(
-                                    persons[idx].name,
-                                    style:
-                                        Theme.of(context).textTheme.headline6,
-                                    maxLines: 2,
-                                  ),
-                                ),
-                                SizedBox(height: 15),
-                                Text('Age',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    )),
-                                Text(
-                                  '12', // persons[idx].age.toString()
-                                  style: Theme.of(context).textTheme.headline6,
-                                ),
-                                SizedBox(height: 15),
-                                Text('Last known location',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                    )),
-                                Text(
-                                  'Cairo', //persons[idx].address
-                                  style: Theme.of(context).textTheme.headline6,
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                });
-          }
-        }),
+                );
+              } else if (snapshot.connectionState == ConnectionState.waiting) {
+                return spinKit.SpinKitRing(color: Colors.teal[500], size: 70);
+              } else if (snapshot.data == []) {
+                return Center(
+                    child: Text(
+                  'No persons yet in our Database',
+                  style: TextStyle(fontSize: 22),
+                ));
+              } else {
+                return Consumer<PoiProvider>(
+                  builder: (context, provider, _) => ListView.builder(
+                      physics: BouncingScrollPhysics(),
+                      itemCount: provider.getPersons.length,
+                      itemBuilder: (context, idx) {
+                        return PoiCard(provider.getPersons[idx]);
+                      }),
+                );
+              }
+            }),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {

@@ -40,6 +40,7 @@ class _AddPersonState extends State<AddPerson> {
   }
 
   Future<void> _submit(Map<String, dynamic> userInput) async {
+    
     try {
       await Provider.of<PoiProvider>(context, listen: false)
           .submitNewPoi(_image.path, userInput);

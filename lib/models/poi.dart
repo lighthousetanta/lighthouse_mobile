@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 class Poi {
   Poi({
     this.id,
@@ -8,8 +7,8 @@ class Poi {
     this.image,
   });
 
-  int id;
-  String name;
+  int id = -1;
+  String name = 'UNKNOWN';
   String image;
 
   factory Poi.fromRawJson(String str) => Poi.fromJson(json.decode(str));
@@ -28,4 +27,3 @@ class Poi {
         "image": image,
       };
 }
-
