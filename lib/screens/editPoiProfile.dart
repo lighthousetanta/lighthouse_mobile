@@ -14,9 +14,9 @@ class EditPoi extends StatefulWidget {
 
 class _EditPoiState extends State<EditPoi> {
   String _fName;
-  String _mName;
-  String _lName;
-  int _age;
+  // String _mName;
+  // String _lName;
+  // int _age;
   bool updated = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -138,7 +138,7 @@ class _EditPoiState extends State<EditPoi> {
                           //   }
                           //   return null;
                           // },
-                          onSaved: (String value) => _mName = value,
+                          // onSaved: (String value) => _mName = value,
                           decoration: InputDecoration(
                             hintText: 'Middle Name',
                             hintStyle: TextStyle(color: Colors.grey),
@@ -162,7 +162,7 @@ class _EditPoiState extends State<EditPoi> {
                           //   }
                           //   return null;
                           // },
-                          onSaved: (String value) => _lName = value,
+                          // onSaved: (String value) => _lName = value,
                           decoration: InputDecoration(
                             hintText: 'Last Name',
                             hintStyle: TextStyle(color: Colors.grey),
