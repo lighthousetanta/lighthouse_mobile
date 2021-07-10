@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
-import 'package:the_lighthouse/screens/reporterDetailsScreen.dart';
+import '../screens/reporterDetailsScreen.dart';
+import '../widgets/poi_details_Sheet.dart';
 import '../models/poi.dart';
 import '../providers/poi_provider.dart';
 
@@ -18,11 +19,13 @@ class PoiReviewProfile extends StatelessWidget {
         title: Text("${poi.name.split(' ')[0]}'s Profile"),
       ),
       body: Container(
-        color: Colors.lightBlue[100],
-        height: double.infinity,
-        width: double.infinity,
+        color: Color.fromRGBO(100, 200, 200, 0.5),
+        height: MediaQuery.of(context).size.height,
+        width: MediaQuery.of(context).size.width,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
+            SizedBox(height: 2),
             Hero(
               tag: poi.id,
               child: InteractiveViewer(
@@ -35,9 +38,7 @@ class PoiReviewProfile extends StatelessWidget {
                     )),
               ),
             ),
-            SizedBox(
-              height: 15,
-            ),
+            SizedBox(height: 2),
             Expanded(
               child: Container(
                   decoration: BoxDecoration(
@@ -49,8 +50,8 @@ class PoiReviewProfile extends StatelessWidget {
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: [
-                            Color.fromRGBO(100, 200, 200, 1),
-                            Color.fromRGBO(76, 161, 175, 1)
+                            Color.fromRGBO(169, 196, 94, 1),
+                            Color.fromRGBO(0, 170, 170, 1)
                           ])),
                   padding: EdgeInsets.all(20),
                   child: Column(
@@ -102,35 +103,63 @@ class PoiReviewProfile extends StatelessWidget {
                               style: Theme.of(context).textTheme.headline4,
                             ),
                           ),
-                          SizedBox(
-                            width: 30,
-                          ),
-                          OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.of(context)
-                                    .pushNamed(ReporterDetailsScreen.routeName);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                  side: BorderSide(color: Colors.white),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.all(
-                                          Radius.circular(15)))),
-                              icon: Icon(
-                                Icons.person,
-                                color: Colors.white,
+                          ElevatedButton.icon(
+                            onPressed: () {
+                              Navigator.of(context)
+                                  .pushNamed(ReporterDetailsScreen.routeName);
+                            },
+                            style: ElevatedButton.styleFrom(
+                                elevation: 2,
+                                // primary: Color.fromRGBO(76, 144, 175, 1),
+                                padding: EdgeInsets.all(10),
+                                side: BorderSide(color: Colors.white),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.all(Radius.circular(15)))),
+                            icon: Icon(
+                              Icons.person,
+                              color: Colors.white,
+                            ),
+                            label: Flexible(
+                              child: Text(
+                                'Reporter Profile',
+                                style: TextStyle(
+                                    fontSize: 20, color: Colors.white),
+                                textAlign: TextAlign.center,
                               ),
-                              label: Flexible(
-                                child: Text(
-                                  'Reporter Profile',
-                                  style: TextStyle(
-                                      fontSize: 20, color: Colors.white),
-                                  textAlign: TextAlign.center,
-                                ),
-                              )),
+                            ),
+                          ),
                         ],
                       ),
                     ],
                   )),
+            ),
+            Divider(
+              height: 0,
+              thickness: 1,
+              color: Colors.white,
+            ),
+            Container(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      // primary: Color.fromRGBO(76, 144, 175, 1),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.zero),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                  icon: Icon(Icons.more_horiz, color: Colors.white),
+                  label: Text('More Details',
+                      style: TextStyle(color: Colors.white, fontSize: 20)),
+                  onPressed: () async {
+                    await showModalBottomSheet(
+                        isScrollControlled: true,
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        builder: (context) {
+                          return PoiDetailsSheet(poi: poi);
+                        });
+                  }),
             ),
           ],
         ),

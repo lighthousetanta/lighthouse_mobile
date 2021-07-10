@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import 'package:loading_overlay/loading_overlay.dart';
-import 'package:the_lighthouse/models/poi.dart';
-import 'package:the_lighthouse/screens/resultScreen.dart';
+import 'package:provider/provider.dart';
+import '../providers/poi_provider.dart';
+import '/screens/resultScreen.dart';
 
 class SearchScreen extends StatefulWidget {
   static const routeName = '/searchScreen';
@@ -16,8 +16,6 @@ class _SearchScreenState extends State<SearchScreen> {
   bool isLoading = false;
   File _image;
   bool res = false;
-  Poi result;
-  double similarity;
   final picker = ImagePicker();
   Future getImage() async {
     final pickedFile = await picker.getImage(source: ImageSource.gallery);
@@ -32,22 +30,15 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _search() async {
-    String img =
-        'https://images.unsplash.com/photo-1477239439998-839196943351?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=714&q=80';
-    Poi dummyData = Poi(id: 500, image: img, name: 'alex');
     try {
-      var response =
-          await Future.delayed(Duration(seconds: 2), () => dummyData);
-      if (response != null) {
-        result = response;
-      }
+      await Provider.of<PoiProvider>(context, listen: false)
+          .searchByImg(_image.path);
       setState(() {
         isLoading = false;
         res = true;
-        Navigator.pushNamed(context, ResultScreen.routeName, arguments: result);
+        Navigator.pushNamed(context, ResultScreen.routeName); 
       });
     } catch (error) {
-      //throw error
       setState(() {
         isLoading = false;
       });
@@ -66,48 +57,79 @@ class _SearchScreenState extends State<SearchScreen> {
         isLoading: isLoading,
         child: Padding(
             padding: EdgeInsets.all(5),
-            child: _image == null
-                ? Center(
-                    child: Text(
-                    "You didn't select an image",
-                    style: TextStyle(color: Colors.redAccent, fontSize: 22),
-                  ))
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Center(
-                        child: Container(
-                          height: 400,
-                          child: Image.file(
-                            _image,
-                          ),
+            child: Container(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(
+                    child: Container(
+                      decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          color: Colors.grey[300]),
+                      height: 400,
+                      child: _image == null
+                          ? Center(
+                              child: Text(
+                              "You didn't add an image",
+                              style: Theme.of(context).textTheme.headline3,
+                            ))
+                          : Image.file(
+                              _image,
+                            ),
+                    ),
+                  ),
+                  Container(
+                    margin: EdgeInsets.only(top: 15),
+                    child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 70, vertical: 10)),
+                        onPressed: () {
+                          getImage();
+                        },
+                        icon: Icon(
+                          Icons.photo,
+                          size: 40,
                         ),
-                      ),
-                      ElevatedButton(
+                        label: Flexible(
+                          child: Text(
+                            _image == null ? 'Add a photo' : 'Change the photo',
+                            style: TextStyle(
+                              fontSize: 22,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        )),
+                  ),
+                  if (_image != null)
+                    Container(
+                      margin: EdgeInsets.only(top: 40),
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
                           onPressed: () async {
                             setState(() {
                               isLoading = true;
                             });
                             await _search();
                           },
-                          child: Text(
+                          icon: Icon(
+                            Icons.search,
+                            size: 40,
+                            semanticLabel: 'Search by image',
+                          ),
+                          label: Text(
                             "Search",
                             textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 18),
+                            style: TextStyle(fontSize: 22),
                           ),
                           style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.fromLTRB(30, 10, 30, 10),
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 0, vertical: 15),
                           )),
-                    ],
-                  )),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          getImage();
-        },
-        
-        tooltip: "Pick an Image",
-        child: Icon(Icons.add_a_photo),
+                    ),
+                ],
+              ),
+            )),
       ),
     );
   }

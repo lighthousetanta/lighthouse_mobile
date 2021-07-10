@@ -3,81 +3,111 @@ import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:the_lighthouse/models/user.dart';
 
 class Auth with ChangeNotifier {
-  List cookies;
-  String _token;
+  Dio dio = Dio();
+  List _cookie;
   DateTime _expiryDate;
-  String _userID;
+  User _user;
   Timer _authTimer;
-  bool get isAuthed {
-    return getToken != null;
-  }
+  static const api = '';
 
-  String get getToken {
+  String _registerEndpoint = '$api/api/register';
+  String _loginEndpoint = '$api/api/login';
+  String _logoutEndpoint = '$api/api/logout';
+
+  bool get isAuthed {
     if (_expiryDate != null &&
         _expiryDate.isAfter(DateTime.now()) &&
-        _token != null) {
-      return _token;
+        _cookie != null) {
+      return true;
+    } else {
+      return false;
     }
-    return null;
   }
 
-  List get getCookies {
-    return cookies;
+  List get getCookie {
+    return _cookie;
   }
 
-  Future<void> _authenticate(String email, String password, String action,
-      {String name = ''}) async {
-    Dio dio = Dio();
+  int get userID {
+    return _user.id;
+  }
 
-    final endpoint = 'https://stormy-lake-08470.herokuapp.com/api/$action';
+  User get getuser {
+    return _user;
+  }
 
+  Future<void> register(String userName, String email, String password) async {
+    print('Register ...');
     try {
-      final preBody = {'name': name, 'email': email, 'password': password};
+      final body = json
+          .encode({'username': userName, 'email': email, 'password': password});
 
-      preBody['name'] = 'Yahia';
-      if (action == 'login') {
-        preBody.remove('name');
+      final Response response = await dio.post(_registerEndpoint, data: body);
+      if (response.statusCode >= 200) {
+        _user = User.fromJson(response.data);
+        _cookie = response.headers['set-cookie'];
+        print(response.headers);
+        print(_cookie);
+
+        _expiryDate = DateTime.now().add(Duration(hours: 1));
+
+        _autoLogout();
+        notifyListeners();
+        final prefrences = await SharedPreferences.getInstance();
+        final userData = json.encode({
+          'cookie': _cookie,
+          'user': _user.toJson(),
+          'expiryDate': _expiryDate.toIso8601String()
+        });
+        prefrences.setString('userData', userData);
       }
-      var body = json.encode(preBody);
-
-      final Response response = await dio.post(endpoint, data: body);
-      print(response.statusCode);
-      print(response.headers);
-      cookies = response.headers['set-cookie'];
-      print(">>>> $cookies");
-      _token = cookies[0].toString().split(';').first.substring(4);
-      print("TOKEN ------> $_token");
-      _expiryDate = DateTime.now().add(Duration(hours: 1));
-
-      _autoLogout();
-      notifyListeners();
-      final prefrences = await SharedPreferences.getInstance();
-      final userData = json.encode({
-        'token': _token,
-        'userID': _userID,
-        'expiryDate': _expiryDate.toIso8601String()
-      });
-      prefrences.setString('userData', userData);
     } catch (error) {
       print(error);
       throw error;
     }
   }
 
-  Future<void> signup(String name, String email, String password) async {
-    return _authenticate(email, password, 'register', name: name);
-  }
-
   Future<void> login(String email, String password) async {
-    return _authenticate(email, password, 'login');
+    print("Login ...");
+    try {
+      final body = json.encode({'email': email, 'password': password});
+      print(body);
+      final Response response = await dio.post(_loginEndpoint, data: body);
+      print(response.data);
+      if (response.statusCode >= 200) {
+        _user = User.fromJson(response.data);
+        _cookie = response.headers['set-cookie'];
+        print(response.headers);
+        print(_cookie);
+
+        _expiryDate = DateTime.now().add(Duration(hours: 1));
+
+        _autoLogout();
+        notifyListeners();
+        final prefrences = await SharedPreferences.getInstance();
+        final userData = json.encode({
+          'cookie': _cookie,
+          'user': _user.toJson(),
+          'expiryDate': _expiryDate.toIso8601String()
+        });
+        prefrences.setString('userData', userData);
+      }
+    } catch (error) {
+      print(error);
+      throw error;
+    }
   }
 
   Future<void> logout() async {
-    _token = null;
+    print('Logout');
+    await dio.post(_logoutEndpoint,
+        options: Options(headers: {'cookie': _cookie}));
+    _cookie = null;
     _expiryDate = null;
-    _userID = null;
+    _user = null;
     // canceling the timer for the drawer logout also
     if (_authTimer != null) {
       _authTimer.cancel();
@@ -97,21 +127,22 @@ class Auth with ChangeNotifier {
   }
 
   Future<bool> tryAutoLogin() async {
+    print("try login");
     final prefrences = await SharedPreferences.getInstance();
     if (!prefrences.containsKey('userData')) {
       return false;
     }
     final extractedData =
         json.decode(prefrences.getString('userData')) as Map<String, Object>;
-    if (extractedData['token'] == null) {
+    if (extractedData['cookie'] == null) {
       return false;
     }
     final savedExpiryDate = DateTime.parse(extractedData['expiryDate']);
     if (savedExpiryDate.isBefore(DateTime.now())) {
       return false;
     }
-    _token = extractedData['token'];
-    _userID = extractedData['userID'];
+    _cookie = extractedData['cookie'];
+    _user = User.fromJson(extractedData['user']);
     _expiryDate = savedExpiryDate;
     notifyListeners();
     _autoLogout();
