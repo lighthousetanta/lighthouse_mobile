@@ -4,20 +4,27 @@ import 'package:dio/dio.dart';
 import '../models/poi.dart';
 
 class PoiProvider with ChangeNotifier {
+  Dio dio = Dio();
   List<Poi> _persons = [];
-  List _cookies;
+  List<Poi> _reported = [];
+  List _cookies = [];
+  List<Poi> _searchResult = [];
+  Map<int, int> _similarityRatiosMap = {};
+  int _searchProcessID;
   PoiProvider(this._cookies, this._persons);
-  static const missingEndpoint =
-      "https://stormy-lake-08470.herokuapp.com/api/missing";
+  static const api = '';
+  String missingEndpoint = '$api/api/missing';
+  String profileEndpoint = '$api/api/profile';
+  String findEndpoint = '$api/api/find';
+  String resultEndpoint = '$api/api/result';
+  // "https://stormy-lake-08470.herokuapp.com/api/";
 
-  List<Poi> _userReported = [];
-
-  List<Poi> get getPersons {
+  List<Poi> get allPersons {
     return [..._persons];
   }
 
-  List<Poi> get getUserReported {
-    return [..._userReported];
+  List<Poi> get reported {
+    return [..._reported];
   }
 
   Poi getById(int id) {
@@ -26,24 +33,29 @@ class PoiProvider with ChangeNotifier {
     return _persons[idx];
   }
 
+  List<Poi> get searchResults {
+    return [..._searchResult];
+  }
+
+  Map<int, int> get similarityMap {
+    return _similarityRatiosMap;
+  }
+
   Future<void> fetchPersons() async {
     print('FETCHING ALL MISSING POIs');
 
-    var dio = Dio();
-    String endPoint = missingEndpoint;
-    List<Poi> loadedData = [];
-
     try {
-      Response response = await dio.get(endPoint);
+      Response response = await dio.get(missingEndpoint);
 
       if (response.statusCode >= 200) {
         print('GET --> Successfully [OK ${response.statusCode}]');
+        List<Poi> fetchedPersons = [];
 
         for (var newPerson in response.data) {
-          loadedData.add(Poi.fromJson(newPerson));
+          fetchedPersons.add(Poi.fromJson(newPerson));
         }
 
-        _persons = loadedData;
+        _persons = fetchedPersons;
 
         notifyListeners();
       } else {
@@ -55,24 +67,25 @@ class PoiProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchPerUser() async {
+  Future<void> fetchReported() async {
     print('FETCHING per user');
 
-    var dio = Dio();
-    String endPoint = missingEndpoint; //+ '&$_userID' ;
-    List<Poi> loadedData = [];
+    String endPoint = profileEndpoint;
+    List<Poi> fetchedPersons = [];
+    print(_cookies);
 
     try {
-      Response response = await dio.get(endPoint);
+      Response response = await dio.get(endPoint,
+          options: Options(headers: {'cookie': _cookies}));
 
       if (response.statusCode >= 200) {
         print('GET --> Successfully [OK ${response.statusCode}]');
 
         for (var newPerson in response.data) {
-          loadedData.add(Poi.fromJson(newPerson));
+          fetchedPersons.add(Poi.fromJson(newPerson));
         }
 
-        _userReported = loadedData;
+        _reported = fetchedPersons;
 
         notifyListeners();
       } else {
@@ -87,15 +100,13 @@ class PoiProvider with ChangeNotifier {
   Future<void> submitNewPoi(
       String imagePath, Map<String, dynamic> userInput) async {
     String imgName = imagePath.split("/").last;
-    print(imagePath);
     try {
+      String endpoint = missingEndpoint;
       var formData = FormData.fromMap({
         "name": userInput['name'],
         'image': await MultipartFile.fromFile(imagePath, filename: imgName),
       });
 
-      var dio = Dio();
-      String endpoint = missingEndpoint;
       Response response = await dio.post(
         endpoint,
         data: formData,
@@ -108,7 +119,7 @@ class PoiProvider with ChangeNotifier {
         print('POST --> Successfully [OK 201]');
 
         final Poi newPoi = Poi.fromJson(response.data);
-        _userReported.add(newPoi);
+        _reported.add(newPoi);
         _persons.add(newPoi);
         notifyListeners();
       }
@@ -118,16 +129,15 @@ class PoiProvider with ChangeNotifier {
   }
 
   Future<void> deletePoi(int poiID) async {
-    var dio = Dio();
-    String endPoint = "$missingEndpoint/$poiID";
     try {
+      String endPoint = "$missingEndpoint/$poiID";
       Response response = await dio.delete(endPoint);
       print('DELETE --> ${response.statusCode}');
 
       if (response.statusCode >= 200) {
-        _userReported.removeWhere((poi) => poi.id == poiID);
-        notifyListeners();
+        _reported.removeWhere((poi) => poi.id == poiID);
         _persons.removeWhere((poi) => poi.id == poiID);
+        notifyListeners();
       }
     } catch (error) {
       throw error;
@@ -153,19 +163,16 @@ class PoiProvider with ChangeNotifier {
     try {
       var formData = FormData.fromMap(body);
 
-      Dio dio = Dio();
-
       String endpoint = "$missingEndpoint/${poiData['id']}";
 
       Response response = await dio.patch(endpoint, data: formData);
 
       print('UPDATE Code--> ${response.statusCode}');
-
+      print(response.data);
       if (response.statusCode == 202) {
         Poi updatedPoi = Poi.fromJson(response.data);
-        int oldPoiIdx =
-            _userReported.indexWhere((poi) => poi.id == poiData['id']);
-        _userReported[oldPoiIdx] = updatedPoi;
+        int oldPoiIdx = _reported.indexWhere((poi) => poi.id == poiData['id']);
+        _reported[oldPoiIdx] = updatedPoi;
 
         int oldPoiIdxAllPos =
             _persons.indexWhere((poi) => poi.id == poiData['id']);
@@ -175,5 +182,51 @@ class PoiProvider with ChangeNotifier {
     } catch (error) {
       throw error;
     }
+  }
+
+  Future<void> searchByImg(String imagePath) async {
+    String imgName = imagePath.split("/").last;
+
+    try {
+      var formData = FormData.fromMap({
+        'image': await MultipartFile.fromFile(imagePath, filename: imgName),
+      });
+
+      print('iniate first');
+      Response response = await dio.post(findEndpoint, data: formData);
+      if (response.statusCode >= 200) {
+        var processID = response.data['id'];
+        _searchProcessID = processID;
+        var delayTime = int.parse(response.data['time']);
+        print(delayTime); ////////// NOT USED yet
+        await Future.delayed(Duration(seconds: 3));
+        print('Initiate Search Process');
+        print(response.data);
+        print('Model has finished searching');
+        await getSearchResults();
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  Future<void> getSearchResults() async {
+    Response resposne = await dio
+        .get(resultEndpoint, queryParameters: {'id': _searchProcessID});
+    print('Getting Results ...');
+    if (resposne.statusCode >= 200) {
+      print('Result GET --> ${resposne.statusCode}');
+      Map<int, int> personsScore = {};
+      List<Poi> similarPersons = [];
+      for (var result in resposne.data) {
+        Poi poi = Poi.fromJson(result['person']);
+        similarPersons.add(poi);
+        personsScore.putIfAbsent(
+            poi.id, () => (((result['score'] - 1) * 100).round()));
+      }
+      _searchResult = similarPersons;
+      _similarityRatiosMap = personsScore;
+    }
+    notifyListeners();
   }
 }
