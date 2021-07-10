@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import '../models/user.dart';
 
 class ReporterDetailsScreen extends StatelessWidget {
   static const routeName = '/reporterDetailsScreen';
   @override
   Widget build(BuildContext context) {
+    User reporter = ModalRoute.of(context).settings.arguments as User;
     return Scaffold(
       appBar: AppBar(
         title: Text('Reporter Details'),
@@ -48,7 +50,7 @@ class ReporterDetailsScreen extends StatelessWidget {
                         children: [
                           FittedBox(
                             child: Text(
-                              'MOHAMED YAHIA EID',
+                              reporter.username,
                               style: TextStyle(
                                   color: Colors.white,
                                   fontFamily: 'Raleway',

@@ -10,7 +10,6 @@ import './screens/editPoiProfile.dart';
 import './screens/poiProfileScreen.dart';
 import './screens/poiReviewProfile.dart';
 import './screens/reportedScreen.dart';
-import './screens/loginScreen.dart';
 import './screens/userProfileScreen.dart';
 import './screens/addPersonScreen.dart';
 import './screens/resultScreen.dart';
@@ -27,13 +26,14 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (ctx) => Auth()),
+        ChangeNotifierProvider(create: (ctx) => PoiProvider([], [])),
         ChangeNotifierProxyProvider<Auth, PoiProvider>(
             //creating an instance of the PoiProvider
-            create: (ctx) => PoiProvider([], []),
+            create: null, // (ctx) => PoiProvider([], []),
             update: (ctx, auth, previousPoiState) => PoiProvider(
-                auth.getCookies,
+                auth.getCookie,
                 // prevent state loss after Auth Provider changes or hot reload
-                previousPoiState == null ? [] : previousPoiState.getPersons)),
+                previousPoiState == null ? [] : previousPoiState.allPersons)),
       ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
                       fontWeight: FontWeight.bold,
                       color: Colors.white),
                   headline3: TextStyle(
-                      fontSize: 22, color: Colors.amber), // details titles font
+                      fontSize: 22, color: Colors.black), // details titles font
                   headline4: TextStyle(
                       // details font
                       fontSize: 24,
@@ -63,7 +63,6 @@ class MyApp extends StatelessWidget {
                 TargetPlatform.iOS: CustomPageTransitionBuilder(),
               })),
           debugShowCheckedModeBanner: false,
-          // home: auth.isAuthed ? ReportedScreen() : AuthScreen(),
           home: auth.isAuthed
               ? ReportedScreen()
               : FutureBuilder(
@@ -75,7 +74,6 @@ class MyApp extends StatelessWidget {
                           : AuthScreen()),
           routes: {
             AuthScreen.routeName: (context) => AuthScreen(),
-            Login.routeName: (context) => Login(),
             UserProfile.routeName: (context) => UserProfile(),
             SearchScreen.routeName: (context) => SearchScreen(),
             AddPerson.routeName: (context) => AddPerson(),

@@ -18,27 +18,20 @@ class _UserReportedScreenState extends State<UserReportedScreen> {
   bool fetchError = false;
   bool isLoading = false;
 
-  Future<void> _fetch() async {
-    try {
-      await Provider.of<PoiProvider>(context, listen: false)
-          .fetchPersons()
-          .then((_) {
-        setState(() {
-          isLoading = false;
-        });
-      });
-    } catch (error) {
-      print('Fetching Error -->$error');
-      setState(() {
-        isLoading = false;
-        fetchError = true;
-      });
-    }
-  }
-
   Future _future;
   Future fetchPerUser() {
-    return Provider.of<PoiProvider>(context, listen: false).fetchPerUser();
+    return Provider.of<PoiProvider>(context, listen: false).fetchReported();
+  }
+
+  @override
+  @override
+  void initState() {
+    if (isInit) {
+      isInit = false;
+      _future = fetchPerUser();
+    }
+    isInit = false;
+    super.initState();
   }
 
   @override
@@ -63,7 +56,7 @@ class _UserReportedScreenState extends State<UserReportedScreen> {
             builder: (context, provider, _) => FutureBuilder(
                 future: _future,
                 builder: (context, snapshot) {
-                  List<Poi> reported = provider.getUserReported;
+                  List<Poi> reported = provider.reported;
                   if (snapshot.hasError) {
                     return Center(
                       child: Column(
@@ -87,12 +80,12 @@ class _UserReportedScreenState extends State<UserReportedScreen> {
                           TextButton(
                               onPressed: () async {
                                 try {
-                                  await _fetch();
+                                  await fetchPerUser();
                                   setState(() {});
                                 } catch (error) {
                                   // doesn't work ??????????!!
-                                  ScaffoldMessenger(
-                                      child: SnackBar(
+                                  ScaffoldMessenger.of(context)
+                                      .showSnackBar(SnackBar(
                                     content: Text('Network Error'),
                                     duration: Duration(seconds: 3),
                                   ));
