@@ -40,7 +40,6 @@ class _AddPersonState extends State<AddPerson> {
   }
 
   Future<void> _submit(Map<String, dynamic> userInput) async {
-    
     try {
       await Provider.of<PoiProvider>(context, listen: false)
           .submitNewPoi(_image.path, userInput);
@@ -72,19 +71,20 @@ class _AddPersonState extends State<AddPerson> {
             padding: const EdgeInsets.all(12.0),
             child: ListView(
               children: [
-                Container(
-                  width: 120,
-                  height: 90,
-                  child: ElevatedButton.icon(
-                    onPressed: _getImage,
-                    icon: Icon(Icons.add_a_photo),
-                    label: Text(
-                      'Add a Photo',
-                      style: TextStyle(
-                        fontSize: 22,
-                      ),
+                Column(
+                  children: [
+                    Container(
+                      width: 170,
+                      height: 170,
+                      decoration: BoxDecoration(
+                          border: Border.all(width: 1, color: Colors.grey)),
+                      child: _image == null
+                          ? Image.asset(
+                              'assets/images/appImages/johndoe.png',
+                            )
+                          : Image.file(_image),
                     ),
-                  ),
+                  ],
                 ),
                 SizedBox(height: 8),
                 imageLoaded
@@ -94,6 +94,23 @@ class _AddPersonState extends State<AddPerson> {
                         'You must Choose an Image.',
                         style: TextStyle(color: Colors.redAccent),
                       ),
+                SizedBox(height: 5),
+                Container(
+                  child: ElevatedButton.icon(
+                    onPressed: _getImage,
+                    style: ElevatedButton.styleFrom(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 0, vertical: 15),
+                    ),
+                    icon: Icon(Icons.photo),
+                    label: Text(
+                      'Add a Photo',
+                      style: TextStyle(
+                        fontSize: 22,
+                      ),
+                    ),
+                  ),
+                ),
                 SizedBox(height: 15),
                 Form(
                   key: _formKey,
@@ -104,7 +121,6 @@ class _AddPersonState extends State<AddPerson> {
                         TextFormField(
                           keyboardType: TextInputType.text,
                           controller: _fName,
-                          maxLength: 20,
                           validator: (value) {
                             if (value.isEmpty) {
                               return "This field cann't be empty.";
@@ -212,11 +228,13 @@ class _AddPersonState extends State<AddPerson> {
                         ),
                         SizedBox(height: 20)
                       ]),
-                      Center(
-                          child: Container(
-                        width: 160,
-                        height: 50,
+                      Container(
+                        width: double.infinity,
                         child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 0, vertical: 15),
+                            ),
                             child: Text(
                               'Submit',
                               style: TextStyle(
@@ -238,11 +256,11 @@ class _AddPersonState extends State<AddPerson> {
                                 print('submiting...');
                                 await _submit(input);
                                 if (added) {
-                                  Navigator.pop(context);
+                                  Navigator.of(context).pop();
                                 }
                               }
                             }),
-                      )),
+                      ),
                     ]),
                   ),
                 ),
@@ -269,7 +287,7 @@ Future<void> _showMyDialog(ctx) async {
         ),
         actions: <Widget>[
           TextButton(
-            child: Text('Approve', style: TextStyle(fontSize: 18)),
+            child: Text('OK', style: TextStyle(fontSize: 18)),
             onPressed: () {
               Navigator.of(context).pop();
             },
