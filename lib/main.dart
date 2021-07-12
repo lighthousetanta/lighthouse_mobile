@@ -26,42 +26,46 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (ctx) => Auth()),
-        ChangeNotifierProvider(create: (ctx) => PoiProvider([], [])),
+        // ChangeNotifierProvider(create: (ctx) => PoiProvider()),
         ChangeNotifierProxyProvider<Auth, PoiProvider>(
             //creating an instance of the PoiProvider
-            create: null, // (ctx) => PoiProvider([], []),
-            update: (ctx, auth, previousPoiState) => PoiProvider(
-                auth.getCookie,
-                // prevent state loss after Auth Provider changes or hot reload
-                previousPoiState == null ? [] : previousPoiState.allPersons)),
+            create: (ctx) => PoiProvider(),
+            update: (ctx, auth, previousPoiState) => previousPoiState
+              ..update(
+                  auth.getCookie,
+                  previousPoiState == null ? [] : previousPoiState.allPersons,
+                  previousPoiState == null ? [] : previousPoiState.reported)
+            // prevent state loss after Auth Provider changes or hot reload
+            )
       ],
       child: Consumer<Auth>(
         builder: (ctx, auth, _) => MaterialApp(
           title: 'The Lighthouse',
           theme: ThemeData(
-              primarySwatch: Colors.teal,
-              textTheme: ThemeData.light().textTheme.copyWith(
-                  headline6: TextStyle(
-                      // Card Info Font
-                      fontFamily: 'Raleway',
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold),
-                  headline5: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                  headline3: TextStyle(
-                      fontSize: 22, color: Colors.black), // details titles font
-                  headline4: TextStyle(
-                      // details font
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white)),
-              visualDensity: VisualDensity.adaptivePlatformDensity,
-              pageTransitionsTheme: PageTransitionsTheme(builders: {
-                TargetPlatform.android: CustomPageTransitionBuilder(),
-                TargetPlatform.iOS: CustomPageTransitionBuilder(),
-              })),
+            primarySwatch: Colors.teal,
+            textTheme: ThemeData.light().textTheme.copyWith(
+                headline6: TextStyle(
+                    // Card Info Font
+                    fontFamily: 'Raleway',
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold),
+                headline5: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white),
+                headline3: TextStyle(
+                    fontSize: 22, color: Colors.black), // details titles font
+                headline4: TextStyle(
+                    // details font
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
+            visualDensity: VisualDensity.adaptivePlatformDensity,
+            pageTransitionsTheme: PageTransitionsTheme(builders: {
+              TargetPlatform.android: CustomPageTransitionBuilder(),
+              TargetPlatform.iOS: CustomPageTransitionBuilder(),
+            }),
+          ),
           debugShowCheckedModeBanner: false,
           home: auth.isAuthed
               ? ReportedScreen()

@@ -11,13 +11,19 @@ class PoiProvider with ChangeNotifier {
   List<Poi> _searchResult = [];
   Map<int, int> _similarityRatiosMap = {};
   int _searchProcessID;
-  PoiProvider(this._cookies, this._persons);
+
   static const api = '';
   String missingEndpoint = '$api/api/missing';
   String profileEndpoint = '$api/api/profile';
   String findEndpoint = '$api/api/find';
   String resultEndpoint = '$api/api/result';
   // "https://stormy-lake-08470.herokuapp.com/api/";
+
+  void update(List cookie, List<Poi> persons, List<Poi> reported) {
+    _persons = persons;
+    _cookies = cookie;
+    _reported = reported;
+  }
 
   List<Poi> get allPersons {
     return [..._persons];
@@ -171,8 +177,11 @@ class PoiProvider with ChangeNotifier {
       print(response.data);
       if (response.statusCode == 202) {
         Poi updatedPoi = Poi.fromJson(response.data);
-        int oldPoiIdx = _reported.indexWhere((poi) => poi.id == poiData['id']);
-        _reported[oldPoiIdx] = updatedPoi;
+        if (reported.isNotEmpty) {
+          int oldPoiIdx =
+              _reported.indexWhere((poi) => poi.id == poiData['id']);
+          _reported[oldPoiIdx] = updatedPoi;
+        }
 
         int oldPoiIdxAllPos =
             _persons.indexWhere((poi) => poi.id == poiData['id']);
@@ -199,7 +208,7 @@ class PoiProvider with ChangeNotifier {
         _searchProcessID = processID;
         var delayTime = int.parse(response.data['time']);
         print(delayTime); ////////// NOT USED yet
-        await Future.delayed(Duration(seconds: 3));
+        await Future.delayed(Duration(seconds: 10));
         print('Initiate Search Process');
         print(response.data);
         print('Model has finished searching');
